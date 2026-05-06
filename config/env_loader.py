@@ -68,6 +68,11 @@ def get_github_token():
     return get_env("GITHUB_TOKEN", "")
 
 
+def get_gemini_api_key():
+    """Gemini API anahtarini dondur."""
+    return get_env("GEMINI_API_KEY", "")
+
+
 def is_sample_mode():
     """Ornek veri modu aktif mi?"""
     return get_env("USE_SAMPLE_DATA", "true").lower() == "true"

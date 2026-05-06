@@ -23,6 +23,7 @@ from config.env_loader import is_sample_mode, clear_env_cache
 clear_env_cache()
 
 from agents.coordinator import Coordinator
+from agents.llm_assistant import LLMAssistant
 
 # Sayfa ayarlari
 st.set_page_config(
@@ -159,6 +160,7 @@ def main():
         st.session_state.is_running = False
         st.session_state.is_done = False
         st.session_state.results = None
+        st.session_state.chat_history = [{"role": "assistant", "content": "Merhaba! Ben Bilge Ajan 🧠. SAP'den cektigimiz bu veriler hakkinda bana istedigini sorabilirsin."}]
         
     c = st.session_state.coordinator
     
@@ -175,6 +177,7 @@ def main():
             st.session_state.is_running = False
             st.session_state.is_done = False
             st.session_state.results = None
+            st.session_state.chat_history = [{"role": "assistant", "content": "Merhaba! Ben Bilge Ajan 🧠. SAP'den cektigimiz bu veriler hakkinda bana istedigini sorabilirsin."}]
             st.rerun()
             
         st.divider()
@@ -307,7 +310,32 @@ def main():
         with tab3:
             if len(charts) > 2 and os.path.exists(charts[2]):
                 st.image(charts[2], use_column_width=True)
-
+                
+        # --- LLM Asistani (Chat) Paneli ---
+        st.divider()
+        st.header("🧠 Bilge Ajan ile Sohbet (LLM)")
+        st.caption("Google Gemini modeli, cekilen 100 kayit uzerinden sorularinizi yanitlar.")
+        
+        # Sohbet gecmisini goster
+        for msg in st.session_state.chat_history:
+            with st.chat_message(msg["role"], avatar="🧠" if msg["role"] == "assistant" else "👤"):
+                st.markdown(msg["content"])
+                
+        # Kullanicidan mesaj al
+        user_question = st.chat_input("Verilerle ilgili bir sey sorun... (Orn: En cok izni kim almis?)")
+        if user_question:
+            # Saniyesinde UI'da goster
+            st.session_state.chat_history.append({"role": "user", "content": user_question})
+            with st.chat_message("user", avatar="👤"):
+                st.markdown(user_question)
+                
+            with st.chat_message("assistant", avatar="🧠"):
+                with st.spinner("Bilge Ajan dusunuyor..."):
+                    # Asistani baslat ve verileri ver
+                    assistant = LLMAssistant(c.tech.clean_data)
+                    cevap = assistant.ask(user_question)
+                    st.markdown(cevap)
+                    st.session_state.chat_history.append({"role": "assistant", "content": cevap})
 
 if __name__ == "__main__":
     main()

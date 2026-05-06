@@ -1,7 +1,7 @@
 # 📊 Proje Durum Takibi — SAP Agentic AI
 
 > Bu dosya proje ilerlemesini otomatik olarak takip eder.  
-> Son güncelleme: **2026-05-06 13:22**
+> Son güncelleme: **2026-05-06 15:15**
 
 ---
 
@@ -13,7 +13,7 @@
 | **Genel İlerleme** | █████████░ **90%** |
 | **Başlangıç Tarihi** | 2026-05-06 |
 | **Tahmini MVP** | 2026-06-17 |
-| **Son Güncelleme** | 2026-05-06 13:22 |
+| **Son Güncelleme** | 2026-05-06 15:15 |
 
 ---
 
@@ -32,12 +32,12 @@
 
 | Metrik | Değer |
 |--------|-------|
-| Toplam dosya | 32 |
-| Toplam satır kod | 2607 |
-| Ajan sayısı | 5/5 |
+| Toplam dosya | 40 |
+| Toplam satır kod | 2899 |
+| Ajan sayısı | 6/5 |
 | Analiz sayısı | 0/4 |
 | Test sayısı | 0 |
-| Commit sayısı | 3 |
+| Commit sayısı | 6 |
 
 ---
 
