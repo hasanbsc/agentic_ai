@@ -59,7 +59,7 @@ def transform_record(record):
     
     return {
         "personel_adi": record.get("PersonelAdi", "").strip(),
-        "proje": record.get("ProjeTxt", "").strip(),
+        "proje": record.get("ProjeTxt", "").strip() or record.get("Proje", "").strip(),
         "tarih": tarih.strftime("%Y-%m-%d") if tarih else None,
         "tarih_obj": tarih,
         "yil": tarih.year if tarih else None,

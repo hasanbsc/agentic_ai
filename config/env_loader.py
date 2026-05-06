@@ -53,6 +53,7 @@ def get_sap_config():
         "username": get_env("SAP_USERNAME", ""),
         "password": get_env("SAP_PASSWORD", ""),
         "verify_ssl": get_env("SAP_VERIFY_SSL", "true").lower() == "true",
+        "client": get_env("SAP_CLIENT", "100"),
     }
 
 

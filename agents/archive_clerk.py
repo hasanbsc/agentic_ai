@@ -14,6 +14,7 @@ import json
 import re
 import sys
 import io
+import urllib3
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -64,9 +65,13 @@ class ArchiveClerk:
         """SAP OData servisinden veri cek."""
         import requests
         
+        # SSL uyarilarini gizle
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        
         base_url = self.sap_config["base_url"]
         service = self.sap_config["service"]
-        url = f"{base_url}{service}/AktivitePlanSet?$format=json"
+        client = self.sap_config.get("client", "100")
+        url = f"{base_url}{service}/SummarySet?$top=20&$format=json&sap-client={client}"
         
         self.log(f"SAP'ye baglaniliyor: {base_url}")
         
