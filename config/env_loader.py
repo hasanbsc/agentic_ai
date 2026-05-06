@@ -39,6 +39,12 @@ def _load_env():
     return _env_cache
 
 
+def clear_env_cache():
+    """Cache'i temizleyerek .env dosyasinin yeniden okunmasini saglar."""
+    global _env_cache
+    _env_cache = None
+
+
 def get_env(key, default=None):
     """Ortam degiskenini oku. Once .env, sonra sistem ortam degiskeni."""
     env = _load_env()

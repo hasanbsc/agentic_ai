@@ -18,8 +18,11 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from config.env_loader import is_sample_mode, clear_env_cache
+# Her yenilemede .env dosyasini bastan oku
+clear_env_cache()
+
 from agents.coordinator import Coordinator
-from config.env_loader import is_sample_mode
 
 # Sayfa ayarlari
 st.set_page_config(
@@ -71,6 +74,15 @@ st.markdown("""
         border-width: 0 10px 10px 10px;
         border-style: solid;
         border-color: transparent transparent #2b303b transparent;
+    }
+    
+    /* Pipeline ok isareti */
+    .pipeline-arrow {
+        text-align: center;
+        font-size: 2em;
+        color: #4b5563;
+        margin-bottom: 10px;
+        margin-top: -10px;
     }
     
     /* Basliklar */
@@ -175,89 +187,102 @@ def main():
         """)
         
     # --- Ana Ekran: Ofis Simulasyonu ---
-    st.header("Ofis Simulasyonu")
+    st.header("Ofis Simulasyonu - Is Akisi (Pipeline)")
     
-    col1, col2 = st.columns(2)
+    # Ajanlari sirasiyla tutacagimiz container'lar
+    step1_ph = st.empty()
+    arrow1_ph = st.empty()
+    step2_ph = st.empty()
+    arrow2_ph = st.empty()
+    step3_ph = st.empty()
+    arrow3_ph = st.empty()
+    step4_ph = st.empty()
     
-    # Ofisi cizme fonksiyonu (Ajanlarin durumlarina gore)
-    def render_office():
-        with col1:
-            draw_agent("Arsiv Memuru", "🗄️", c.clerk.status, c.clerk.messages, "SAP'den personel verilerini ceker.")
-            draw_agent("Mufettis", "🔍", c.inspector.status, c.inspector.messages, "Temiz verilerden istatistikler uretir.")
-            
-        with col2:
-            draw_agent("Veri Teknisyeni", "🔧", c.tech.status, c.tech.messages, "Ham verileri temizler ve donusturur.")
-            draw_agent("Grafik Sihirbazi", "🎨", c.wizard.status, c.wizard.messages, "Istatistikleri gorsellestirir.")
+    def render_pipeline():
+        """Ajanlari sirayla goster"""
+        with step1_ph.container():
+            draw_agent("Adim 1: Arsiv Memuru", "🗄️", c.clerk.status, c.clerk.messages, "SAP'den canli verileri ceker.")
+        if c.clerk.status == "tamamlandi":
+            arrow1_ph.markdown("<div class='pipeline-arrow'>⬇️</div>", unsafe_allow_html=True)
+            with step2_ph.container():
+                draw_agent("Adim 2: Veri Teknisyeni", "🔧", c.tech.status, c.tech.messages, "Gelen OData verilerini Python formatlarina temizler.")
+        if c.tech.status == "tamamlandi":
+            arrow2_ph.markdown("<div class='pipeline-arrow'>⬇️</div>", unsafe_allow_html=True)
+            with step3_ph.container():
+                draw_agent("Adim 3: Mufettis", "🔍", c.inspector.status, c.inspector.messages, "Temiz verilerden personel, izin, proje vb. analizler yapar.")
+        if c.inspector.status == "tamamlandi":
+            arrow3_ph.markdown("<div class='pipeline-arrow'>⬇️</div>", unsafe_allow_html=True)
+            with step4_ph.container():
+                draw_agent("Adim 4: Grafik Sihirbazi", "🎨", c.wizard.status, c.wizard.messages, "Analiz verilerinden rapor/grafik uretir.")
+
+    if not st.session_state.is_running and not st.session_state.is_done:
+        with step1_ph.container():
+            draw_agent("Adim 1: Arsiv Memuru", "🗄️", "bekliyor", [], "Baslatilmayi bekliyor...")
 
     # Eger butona basildiysa sureci animasyonlu olarak yurut
     if start_btn:
         st.session_state.is_running = True
         st.session_state.is_done = False
         
-        # Streamlit'te gercek zamanli animasyon hissi vermek icin
-        # ajanlari adim adim calistirip aralarda st.rerun kullanmak yerine
-        # ekrani guncelleyebilen placeholder'lar kullaniyoruz.
-        
-        office_container = st.empty()
-        with office_container.container():
-            render_office()
-            
         # 1. Arsiv Memuru
-        time.sleep(1)
         c.clerk.status = "calisiyor"
-        c.clerk.log("SAP OData servisine baglaniliyor...")
-        with office_container.container(): render_office()
+        c.clerk.log("Gorev basliyor...")
+        render_pipeline()
         time.sleep(1)
-        
         raw_data = c.clerk.run()
-        with office_container.container(): render_office()
+        c.clerk.status = "tamamlandi" if raw_data else "hata"
+        render_pipeline()
         
-        if c.clerk.status != "hata":
+        if c.clerk.status == "tamamlandi":
             # 2. Veri Teknisyeni
             time.sleep(1)
             c.tech.status = "calisiyor"
-            c.tech.log(f"{len(raw_data)} kayit teslim alindi...")
-            with office_container.container(): render_office()
+            c.tech.log("Gorev basliyor...")
+            render_pipeline()
             time.sleep(1)
             
             c.tech.set_data(raw_data)
             clean_data = c.tech.run()
-            with office_container.container(): render_office()
+            c.tech.status = "tamamlandi" if clean_data else "hata"
+            render_pipeline()
             
-            # 3. Mufettis
-            time.sleep(1)
-            c.inspector.status = "calisiyor"
-            c.inspector.log("Temiz veriler istatistik motoruna yukleniyor...")
-            with office_container.container(): render_office()
-            time.sleep(1.5)
-            
-            c.inspector.set_data(clean_data)
-            analysis_results = c.inspector.run()
-            with office_container.container(): render_office()
-            
-            # 4. Grafik Sihirbazi
-            time.sleep(1)
-            c.wizard.status = "calisiyor"
-            c.wizard.log("Tablolar gorsel grafiklere cevriliyor...")
-            with office_container.container(): render_office()
-            time.sleep(2)
-            
-            c.wizard.set_results(analysis_results)
-            charts = c.wizard.run()
-            with office_container.container(): render_office()
-            
-            st.session_state.results = {
-                "charts": charts,
-                "analysis": analysis_results
-            }
+            if c.tech.status == "tamamlandi":
+                # 3. Mufettis
+                time.sleep(1)
+                c.inspector.status = "calisiyor"
+                c.inspector.log("Gorev basliyor...")
+                render_pipeline()
+                time.sleep(1)
+                
+                c.inspector.set_data(clean_data)
+                analysis_results = c.inspector.run()
+                c.inspector.status = "tamamlandi" if analysis_results else "hata"
+                render_pipeline()
+                
+                if c.inspector.status == "tamamlandi":
+                    # 4. Grafik Sihirbazi
+                    time.sleep(1)
+                    c.wizard.status = "calisiyor"
+                    c.wizard.log("Gorev basliyor...")
+                    render_pipeline()
+                    time.sleep(1)
+                    
+                    c.wizard.set_results(analysis_results)
+                    charts = c.wizard.run()
+                    c.wizard.status = "tamamlandi" if charts else "hata"
+                    render_pipeline()
+                    
+                    st.session_state.results = {
+                        "charts": charts,
+                        "analysis": analysis_results
+                    }
             
         st.session_state.is_running = False
         st.session_state.is_done = True
         st.rerun()
-        
-    else:
-        # Normal cizim (calismiyorken)
-        render_office()
+
+    elif st.session_state.is_done:
+        render_pipeline()
 
     # --- Rapor Paneli ---
     if st.session_state.is_done and st.session_state.results:
