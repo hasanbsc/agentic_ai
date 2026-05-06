@@ -71,7 +71,7 @@ class ArchiveClerk:
         base_url = self.sap_config["base_url"]
         service = self.sap_config["service"]
         client = self.sap_config.get("client", "100")
-        url = f"{base_url}{service}/SummarySet?$top=100&$format=json&sap-client={client}"
+        url = f"{base_url}{service}/SummarySet?$format=json&sap-client={client}"
         
         self.log(f"SAP'ye baglaniliyor: {base_url}")
         

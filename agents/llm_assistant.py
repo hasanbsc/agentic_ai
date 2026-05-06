@@ -12,12 +12,8 @@ Kullanim:
 
 import sys
 import json
+import requests
 from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
-
-from config.env_loader import get_gemini_api_key
 
 class LLMAssistant:
     """
@@ -32,20 +28,10 @@ class LLMAssistant:
     
     def __init__(self, clean_data=None):
         self.data = clean_data or []
-        self.api_key = get_gemini_api_key()
         self.status = "bekliyor"
         self.messages = []
-        
-        # Eger key varsa clienti baslat
-        if self.api_key and self.api_key != "buraya_api_key_yazilacak":
-            try:
-                from google import genai
-                self.client = genai.Client(api_key=self.api_key)
-            except ImportError:
-                self.client = None
-                self.log("Uyari: google-genai kutuphanesi yuklu degil!")
-        else:
-            self.client = None
+        self.ollama_url = "http://localhost:11434/api/generate"
+        self.model_name = "llama3" # Kullanacaginiz yerel model (llama3, mistral, phi3 vb.)
             
     def log(self, message):
         """Ajan mesaji kaydet."""
@@ -60,9 +46,6 @@ class LLMAssistant:
         
     def ask(self, question):
         """Soruya cevap uretir"""
-        if not self.client:
-            return "Sistem: Gemini API Anahtari bulunamadi veya google-genai yuklu degil. Lutfen .env dosyasina GEMINI_API_KEY ekleyin."
-            
         if not self.data:
             return "Sistem: Analiz edilecek hic veri bulunamadi. Once verileri cekmelisiniz."
             
@@ -71,42 +54,45 @@ class LLMAssistant:
         
         # Veriyi kucult (Prompt'a sigmasi icin cok fazla alan varsa sadece onemlileri tutalim)
         # Ama 100 kayit genelde kucuktur, hepsini string'e cevirebiliriz.
+        # Local LLM'in baglamina (context) sigmasi icin sadece son 50 kaydi gonderiyoruz
+        # Eger 16.000 kayit gonderirsek local LLM'in hafizasi sisebilir!
         mini_data = []
-        for d in self.data:
+        for d in self.data[:50]:
             mini_data.append({
                 "Personel": d.get("personel_adi"),
-                "Tarih": d.get("tarih"),
                 "Sure": d.get("sure_saat"),
-                "Proje": d.get("proje"),
-                "Lokasyon": d.get("lokasyon")
+                "Proje": d.get("proje")
             })
             
         json_data = json.dumps(mini_data, ensure_ascii=False)
         
-        prompt = f"""
-Sen bir IK ve Proje Yonetimi asistanisin (Bilge Ajan). 
-Asagida sana sirketimizin SAP sisteminden cekilmis personel aktivite (zaman cizelgesi) verilerini JSON formatinda veriyorum.
-Bu verilere dayanarak kullanicinin sorusunu samimi, profesyonel ve dogru bir sekilde, tamamen Turkce cevapla.
-Eger sorunun cevabi verilerde yoksa, uydurma, "Bu bilgiye sahip degilim" de.
-
-[VERILER]:
-{json_data}
-
-[KULLANICI SORUSU]:
-{question}
-"""
+        prompt = f"""Sen bir IK asistanisin. Asagidaki JSON verilerine bakarak kullanicinin sorusunu kisa ve oz sekilde, Turkce cevapla.
+Veriler: {json_data}
+Soru: {question}"""
+        
         try:
-            response = self.client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-            )
+            payload = {
+                "model": self.model_name,
+                "prompt": prompt,
+                "stream": False
+            }
+            response = requests.post(self.ollama_url, json=payload, timeout=120)
+            response.raise_for_status()
+            
+            result_text = response.json().get("response", "")
+            
             self.status = "tamamlandi"
-            self.log("Cevap uretildi.")
-            return response.text
+            self.log("Yerel LLM'den cevap alindi.")
+            return result_text
+            
+        except requests.exceptions.ConnectionError:
+            self.status = "hata"
+            self.log("HATA: Ollama calismiyor olabilir.")
+            return "Sistem: Ollama'ya baglanilamadi. Lutfen bilgisayarinizda Ollama'nin calistigindan emin olun (http://localhost:11434)."
         except Exception as e:
             self.status = "hata"
-            self.log(f"API Hatasi: {str(e)}")
-            return f"Maalesef bir hata olustu: {str(e)}"
+            self.log(f"HATA: {str(e)}")
+            return f"Maalesef yerel modelde bir hata olustu: {str(e)}"
 
 if __name__ == "__main__":
     asistan = LLMAssistant([{"personel_adi": "Bora Uckun", "tarih": "2023-06-26", "sure_saat": 8.0, "proje": "Yillik Izin"}])
