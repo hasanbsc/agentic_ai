@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment variables
+.env
+.env.local
+
+# Data (büyük veri dosyalarını repo'ya ekleme)
+data/raw/*.json
+data/raw/*.csv
+!data/sample/
+
+# Reports (üretilen raporlar)
+reports/output/
+
+# Logs
+logs/*.log
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage

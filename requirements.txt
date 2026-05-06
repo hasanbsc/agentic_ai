@@ -1,0 +1,22 @@
+# SAP Bağlantı
+requests>=2.31.0
+
+# Veri İşleme
+pandas>=2.1.0
+
+# Görselleştirme
+matplotlib>=3.8.0
+plotly>=5.18.0
+
+# Arayüz (MVP)
+streamlit>=1.29.0
+
+# Yapılandırma
+pyyaml>=6.0.1
+
+# Yardımcı
+python-dateutil>=2.8.2
+rich>=13.7.0         # Terminal çıktıları için güzel formatlama
+
+# Test
+pytest>=7.4.0

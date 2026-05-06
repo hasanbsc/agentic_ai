@@ -1,0 +1,53 @@
+# SAP Agentic AI — Yapılandırma Şablonu
+# Bu dosyayı config.yaml olarak kopyalayıp kendi bilgilerinizle doldurun.
+
+sap:
+  # SAP OData servis URL'i
+  base_url: "https://your-sap-server.com/sap/opu/odata/sap/"
+  service: "YMONO_AKT_PLN_SRV"
+  
+  # Kimlik doğrulama
+  auth:
+    username: "SAP_USER"
+    password: "SAP_PASSWORD"
+  
+  # İstek ayarları
+  request:
+    timeout: 30           # saniye
+    verify_ssl: true
+    max_retries: 3
+    page_size: 1000       # her istekte çekilecek kayıt sayısı
+
+data:
+  # Yerel veri deposu
+  storage:
+    format: "json"         # json veya sqlite
+    path: "data/raw/"
+    cache_duration: 3600   # saniye (1 saat)
+  
+  # Örnek veri
+  sample:
+    path: "data/sample/"
+    use_sample: true       # true ise SAP yerine örnek veriyi kullan
+
+agents:
+  # Ajan ayarları
+  log_level: "INFO"        # DEBUG, INFO, WARNING, ERROR
+  message_queue_size: 100
+  
+  # Her ajanın animasyon hızı (saniye)
+  animation_speed: 1.5
+
+ui:
+  # Arayüz ayarları
+  theme: "dark"            # dark veya light
+  window_width: 1200
+  window_height: 800
+  fps: 30                  # kare/saniye (animasyon için)
+
+reports:
+  # Rapor çıktı ayarları
+  output_path: "reports/output/"
+  formats:
+    - "html"
+    - "png"
