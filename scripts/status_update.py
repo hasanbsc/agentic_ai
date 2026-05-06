@@ -42,7 +42,14 @@ def count_lines(directory, extension=".py"):
     total = 0
     if not path.exists():
         return 0
+    
+    ignore_dirs = {"venv", ".venv", "__pycache__", ".git", "node_modules"}
+    
     for file in path.rglob(f"*{extension}"):
+        # Ignore files inside ignore_dirs
+        if any(ignored in file.parts for ignored in ignore_dirs):
+            continue
+            
         try:
             with open(file, "r", encoding="utf-8") as f:
                 lines = [l for l in f.readlines() if l.strip() and not l.strip().startswith("#")]

@@ -47,12 +47,19 @@ def main():
     """Ana giriş noktası."""
     print_banner()
     
-    # TODO: Faz 1 - SAP baglanti modulu eklenecek
-    # TODO: Faz 2 - Ajan sistemi baslatilacak
-    # TODO: Faz 3 - Analiz motoru eklenecek
-    # TODO: Faz 4 - Gorsel arayuz baslatilacak
+    # Faz 1, 2, 3 entegrasyonu (Koordinatör Ajani üzerinden)
+    from agents.coordinator import Coordinator
     
-    print("    [!] Sistem henuz gelistirme asamasinda.")
+    coordinator = Coordinator()
+    results = coordinator.run_pipeline()
+    
+    if results:
+        print(f"\n    [OK] Analiz tamamlandi! {len(results['charts'])} grafik uretildi.")
+        print("    [i] Raporlara 'reports/output' klasorunden ulasabilirsiniz.")
+    else:
+        print("\n    [HATA] Surec tamamlanamadi. Lutfen loglari kontrol edin.")
+        
+    print("\n    [!] Gorsel arayuz (Faz 4) henuz gelistirme asamasinda.")
     print("    [i] Durum takibi icin: STATUS.md dosyasina bakiniz.")
     print("    [i] Detayli plan icin: implementation_plan.md dosyasina bakiniz.")
     print()
